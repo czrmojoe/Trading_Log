@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trading Log Mobile Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 { 
+            text-align: center; 
+            margin: 15px 0 25px 0; 
+            font-weight: 500; 
+            font-size: 24px;
+            letter-spacing: 0.5px; 
+        }
+
+        /* Responsive Grid: คอมแบ่งคอลัมน์ มือถือเรียงแนวตั้ง */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 960px) {
+            .grid {
+                grid-template-columns: 360px 1fr;
+            }
+            .full-width {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 { 
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            font-size: 16px; 
+            color: var(--primary); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        /* Form & Inputs ขยายให้เหมาะกับนิ้วจิ้ม */
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-sub); }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            -webkit-appearance: none; /* ลบสไตล์เดิมของ iOS */
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        button:hover, button:active { background: #2563eb; }
+
+        /* Chart Section & Filter */
+        .chart-header { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px;
+            margin-bottom: 16px; 
+        }
+        @media (min-width: 600px) {
+            .chart-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .filter-group { 
+            display: flex; 
+            gap: 8px; 
+            align-items: center; 
+            width: 100%;
+        }
+        .filter-group input { padding: 8px; font-size: 14px; flex: 1; }
+        .btn-filter { width: auto; padding: 8px 14px; background: #475569; font-size: 14px; }
+
+        .chart-container { 
+            position: relative;
+            height: 280px; 
+            width: 100%; 
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 360px; }
+        }
+
+        /* Table Section ป้องกันตารางล้นจอในมือถือ */
+        .table-container { 
+            margin-top: 10px; 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; /* เลื่อนลื่นๆ บน iOS */
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: left; 
+            min-width: 500px; /* บังคับขนาดขั้นต่ำเพื่อให้แสดงผลสวยงามตอนปัดข้าง */
+        }
+        th { padding: 12px; background: #131d2e; color: var(--text-sub); font-size: 13px; font-weight: 500; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .win { color: var(--success); font-weight: 600; }
+        .loss { color: var(--danger); font-weight: 600; }
+        
+        .btn-delete { 
+            background: none; 
+            border: none; 
+            color: #64748b; 
+            cursor: pointer; 
+            padding: 8px;
+            font-size: 16px;
+        }
+        .btn-delete:hover, .btn-delete:active { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1><i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Trading Log</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h3><i class="fa-solid fa-square-plus"></i> เพิ่มบันทึกผลการเทรด</h3>
+            <form id="tradeForm">
+                <div class="form-group">
+                    <label>วันที่</label>
+                    <input type="date" id="dateInput" required>
+                </div>
+                <div class="form-group">
+                    <label>ทุนปัจจุบัน (Capital)</label>
+                    <input type="number" id="capInput" placeholder="0.00" step="0.01" inputmode="decimal" required>
+                </div>
+                <div class="form-group">
+                    <label>กำไร/ขาดทุน (PnL)</label>
+                    <input type="number" id="pnlInput" placeholder="+ / - 0.00" step="0.01" inputmode="decimal" required>
+                </div>
+                <button type="submit"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-bar"></i> ประสิทธิภาพพอร์ต</h3>
+                <div class="filter-group">
+                    <input type="date" id="filterStart">
+                    <span style="color: var(--text-sub)">-</span>
+                    <input type="date" id="filterEnd">
+                    <button class="btn-filter" onclick="applyFilter()">กรอง</button>
+                    <button class="btn-filter" onclick="resetData()" style="background: #334155;"><i class="fa-solid fa-rotate-left"></i></button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h3><i class="fa-solid fa-list-ul"></i> ประวัติทั้งหมด <span style="font-size: 12px; color: var(--text-sub); font-weight: normal;">(ปัดซ้าย-ขวาเพื่อดูเพิ่มได้)</span></h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>เงินทุน (Capital)</th>
+                            <th>กำไร/ขาดทุน (PnL)</th>
+                            <th>% กำไร</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let tradeLogs = JSON.parse(localStorage.getItem('tradeLogs')) || [
+        { date: '2026-06-05', capital: 10000, pnl: 500 },
+        { date: '2026-06-06', capital: 10500, pnl: -200 },
+        { date: '2026-06-07', capital: 10300, pnl: 800 },
+        { date: '2026-06-08', capital: 11100, pnl: 400 },
+        { date: '2026-06-09', capital: 11500, pnl: -100 }
+    ];
+
+    document.getElementById('dateInput').valueAsDate = new Date();
+    let chartObj = null;
+
+    function updateChart(dataArray) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        dataArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const labels = dataArray.map(item => item.date);
+        const capData = dataArray.map(item => item.capital);
+        const pnlData = dataArray.map(item => item.pnl);
+
+        if (chartObj) chartObj.destroy();
+
+        chartObj = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Capital',
+                        data: capData,
+                        backgroundColor: '#3b82f6',
+                        categoryPercentage: 0.6,
+                        barPercentage: 0.8
+                    },
+                    {
+                        label: 'PnL',
+                        data: pnlData,
+                        backgroundColor: pnlData.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
+                        categoryPercentage: 0.6,
+                        barPercentage: 0.8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
+                    y: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: '#334155' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f8fafc', font: { size: 11 } }, position: 'top' }
+                }
+            }
+        });
+    }
+
+    function updateTable(dataArray) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        const sorted = [...dataArray].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sorted.forEach((item) => {
+            const percent = ((item.pnl / item.capital) * 100).toFixed(2);
+            const row = `
+                <tr>
+                    <td>${item.date}</td>
+                    <td>${item.capital.toLocaleString()}</td>
+                    <td class="${item.pnl >= 0 ? 'win' : 'loss'}">
+                        ${item.pnl >= 0 ? '+' : ''}${item.pnl.toLocaleString()}
+                    </td>
+                    <td class="${item.pnl >= 0 ? 'win' : 'loss'}">${percent}%</td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteLog('${item.date}')">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    document.getElementById('tradeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const date = document.getElementById('dateInput').value;
+        const capital = parseFloat(document.getElementById('capInput').value);
+        const pnl = parseFloat(document.getElementById('pnlInput').value);
+
+        const existingIdx = tradeLogs.findIndex(l => l.date === date);
+        if(existingIdx > -1) {
+            tradeLogs[existingIdx] = { date, capital, pnl };
+        } else {
+            tradeLogs.push({ date, capital, pnl });
+        }
+
+        saveAndRefresh();
+        e.target.reset();
+        document.getElementById('dateInput').valueAsDate = new Date();
+    });
+
+    function deleteLog(date) {
+        if(confirm('ต้องการลบข้อมูลวันที่ ' + date + '?')) {
+            tradeLogs = tradeLogs.filter(l => l.date !== date);
+            saveAndRefresh();
+        }
+    }
+
+    function applyFilter() {
+        const start = document.getElementById('filterStart').value;
+        const end = document.getElementById('filterEnd').value;
+        if(!start || !end) return alert('กรุณาระบุช่วงวันที่');
+
+        const filtered = tradeLogs.filter(l => l.date >= start && l.date <= end);
+        updateChart(filtered);
+        updateTable(filtered);
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('tradeLogs', JSON.stringify(tradeLogs));
+        updateChart(tradeLogs);
+        updateTable(tradeLogs);
+    }
+
+    function resetData() {
+        document.getElementById('filterStart').value = '';
+        document.getElementById('filterEnd').value = '';
+        saveAndRefresh();
+    }
+
+    saveAndRefresh();
+</script>
+
+</body>
+</html>
