@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trading Log Mobile Dashboard</title>
+    <title>Trading Log Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -21,40 +21,21 @@
         * { box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
             padding: 12px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; margin: 15px 0 25px 0; font-weight: 500; font-size: 24px; }
 
-        h1 { 
-            text-align: center; 
-            margin: 15px 0 25px 0; 
-            font-weight: 500; 
-            font-size: 24px;
-            letter-spacing: 0.5px; 
-        }
-
-        /* Responsive Grid: คอมแบ่งคอลัมน์ มือถือเรียงแนวตั้ง */
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 
         @media (min-width: 960px) {
-            .grid {
-                grid-template-columns: 360px 1fr;
-            }
-            .full-width {
-                grid-column: 1 / -1;
-            }
+            .grid { grid-template-columns: 360px 1fr; }
+            .full-width { grid-column: 1 / -1; }
         }
 
         .card {
@@ -65,114 +46,52 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        h3 { 
-            margin-top: 0; 
-            margin-bottom: 16px; 
-            font-size: 16px; 
-            color: var(--primary); 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
+        h3 { margin-top: 0; margin-bottom: 16px; font-size: 16px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
 
-        /* Form & Inputs ขยายให้เหมาะกับนิ้วจิ้ม */
         .form-group { margin-bottom: 14px; }
         label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-sub); }
         input {
-            width: 100%;
-            padding: 12px;
-            background: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            -webkit-appearance: none; /* ลบสไตล์เดิมของ iOS */
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
+            width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border);
+            border-radius: 8px; color: white; font-size: 16px; -webkit-appearance: none;
         }
         
         button {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
+            width: 100%; padding: 14px; background: var(--primary); color: white; border: none;
+            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
         }
         button:hover, button:active { background: #2563eb; }
 
-        /* Chart Section & Filter */
-        .chart-header { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px;
-            margin-bottom: 16px; 
-        }
+        .btn-secondary { background: #475569; padding: 10px; font-size: 14px; margin-top: 8px;}
+        .btn-secondary:hover { background: #334155; }
+
+        .chart-header { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
         @media (min-width: 600px) {
-            .chart-header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
+            .chart-header { flex-direction: row; justify-content: space-between; align-items: center; }
         }
 
-        .filter-group { 
-            display: flex; 
-            gap: 8px; 
-            align-items: center; 
-            width: 100%;
-        }
+        .filter-group { display: flex; gap: 8px; align-items: center; width: 100%; }
         .filter-group input { padding: 8px; font-size: 14px; flex: 1; }
         .btn-filter { width: auto; padding: 8px 14px; background: #475569; font-size: 14px; }
 
-        .chart-container { 
-            position: relative;
-            height: 280px; 
-            width: 100%; 
-        }
-        @media (min-width: 768px) {
-            .chart-container { height: 360px; }
-        }
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        @media (min-width: 768px) { .chart-container { height: 360px; } }
 
-        /* Table Section ป้องกันตารางล้นจอในมือถือ */
         .table-container { 
-            margin-top: 10px; 
-            overflow-x: auto; 
-            -webkit-overflow-scrolling: touch; /* เลื่อนลื่นๆ บน iOS */
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; 
+            border-radius: 8px; border: 1px solid var(--border);
         }
         
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            text-align: left; 
-            min-width: 500px; /* บังคับขนาดขั้นต่ำเพื่อให้แสดงผลสวยงามตอนปัดข้าง */
-        }
-        th { padding: 12px; background: #131d2e; color: var(--text-sub); font-size: 13px; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 500px; }
+        th { padding: 12px; background: #131d2e; color: var(--text-sub); font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .win { color: var(--success); font-weight: 600; }
         .loss { color: var(--danger); font-weight: 600; }
         
-        .btn-delete { 
-            background: none; 
-            border: none; 
-            color: #64748b; 
-            cursor: pointer; 
-            padding: 8px;
-            font-size: 16px;
-        }
-        .btn-delete:hover, .btn-delete:active { color: var(--danger); }
+        .btn-delete { background: none; border: none; color: #64748b; cursor: pointer; padding: 8px; font-size: 16px; }
+        .btn-delete:hover { color: var(--danger); }
+        
+        .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -198,6 +117,11 @@
                 </div>
                 <button type="submit"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
             </form>
+
+            <div class="backup-zone">
+                <button class="btn-secondary" onclick="exportData()"><i class="fa-solid fa-download"></i> สำรองข้อมูล</button>
+                <button class="btn-secondary" onclick="importData()"><i class="fa-solid fa-upload"></i> ซิงค์เข้าเครื่อง</button>
+            </div>
         </div>
 
         <div class="card">
@@ -217,7 +141,7 @@
         </div>
 
         <div class="card full-width">
-            <h3><i class="fa-solid fa-list-ul"></i> ประวัติทั้งหมด <span style="font-size: 12px; color: var(--text-sub); font-weight: normal;">(ปัดซ้าย-ขวาเพื่อดูเพิ่มได้)</span></h3>
+            <h3><i class="fa-solid fa-list-ul"></i> ประวัติทั้งหมด</h3>
             <div class="table-container">
                 <table>
                     <thead>
@@ -237,13 +161,7 @@
 </div>
 
 <script>
-    let tradeLogs = JSON.parse(localStorage.getItem('tradeLogs')) || [
-        { date: '2026-06-05', capital: 10000, pnl: 500 },
-        { date: '2026-06-06', capital: 10500, pnl: -200 },
-        { date: '2026-06-07', capital: 10300, pnl: 800 },
-        { date: '2026-06-08', capital: 11100, pnl: 400 },
-        { date: '2026-06-09', capital: 11500, pnl: -100 }
-    ];
+    let tradeLogs = JSON.parse(localStorage.getItem('tradeLogs')) || [];
 
     document.getElementById('dateInput').valueAsDate = new Date();
     let chartObj = null;
@@ -299,7 +217,7 @@
         const sorted = [...dataArray].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         sorted.forEach((item) => {
-            const percent = ((item.pnl / item.capital) * 100).toFixed(2);
+            const percent = item.capital ? ((item.pnl / item.capital) * 100).toFixed(2) : 0;
             const row = `
                 <tr>
                     <td>${item.date}</td>
@@ -333,7 +251,8 @@
         }
 
         saveAndRefresh();
-        e.target.reset();
+        document.getElementById('capInput').value = '';
+        document.getElementById('pnlInput').value = '';
         document.getElementById('dateInput').valueAsDate = new Date();
     });
 
@@ -364,6 +283,35 @@
         document.getElementById('filterStart').value = '';
         document.getElementById('filterEnd').value = '';
         saveAndRefresh();
+    }
+
+    // ฟังก์ชันส่งออกข้อความสตรีมข้อมูลเพื่อนำไปใช้ย้ายเครื่อง
+    function exportData() {
+        if(tradeLogs.length === 0) return alert('ไม่มีข้อมูลให้สำรอง');
+        const dataStr = JSON.stringify(tradeLogs);
+        navigator.clipboard.writeText(dataStr).then(() => {
+            alert('คัดลอกรหัสข้อมูลลงคลิปบอร์ดแล้ว! สามารถนำรหัสนี้ไปส่งในไลน์เพื่อใช้ป้อนเข้ามือถือได้เลย');
+        }).catch(() => {
+            alert('รหัสข้อมูลสำหรับการสำรองคือ:\n\n' + dataStr);
+        });
+    }
+
+    // ฟังก์ชันนำเข้าข้อมูลจากเครื่องอื่น
+    function importData() {
+        const dataStr = prompt('วางรหัสข้อมูลที่ได้จากการสำรองข้อมูลเพื่อซิงค์เข้าเครื่องนี้:');
+        if(!dataStr) return;
+        try {
+            const parsed = JSON.parse(dataStr);
+            if(Array.isArray(parsed)) {
+                tradeLogs = parsed;
+                saveAndRefresh();
+                alert('ซิงค์ข้อมูลเรียบร้อยแล้ว!');
+            } else {
+                alert('รูปแบบข้อมูลไม่ถูกต้อง');
+            }
+        } catch(e) {
+            alert('เกิดข้อผิดพลาดในการอ่านข้อมูล');
+        }
     }
 
     saveAndRefresh();
