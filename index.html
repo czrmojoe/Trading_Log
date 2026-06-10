@@ -151,6 +151,7 @@
                             <th class="py-3 px-4">เดือนที่ (เริ่ม พ.ค. เป็นต้นไป)</th>
                             <th class="py-3 px-4">ทุนพอร์ตเริ่มต้น ($)</th>
                             <th class="py-3 px-4">กำไรจาก PnL ($)</th>
+                            <th class="py-3 px-4">เงินในพอร์ตหลังจาก Cash out ($)</th>
                             <th class="py-3 px-4">Cash out (THB)</th>
                             <th class="py-3 px-4">เงินเก็บธนาคารสุทธิ (THB)</th>
                         </tr>
@@ -161,6 +162,7 @@
                                 <td class="py-3 px-4" x-text="getMonthLabel(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthCapital(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthProfit(m)"></td>
+                                <td class="py-3 px-4" x-text="simMonthRemaining(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthCashout(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthBank(m)"></td>
                             </tr>
@@ -189,7 +191,7 @@
                 totalExpenses: parseFloat(savedSettings.totalExpenses),
                 topupAmountThb: parseFloat(savedSettings.topupAmountThb),
 
-                selectedMonth: '2026-05', // เริ่มต้นที่ พฤษภาคม 2026
+                selectedMonth: '2026-05',
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
@@ -232,7 +234,6 @@
                 },
 
                 getChartLabels() {
-                    // สร้าง Label 6 เดือน เริ่มจากเดือนที่เลือก
                     let labels = [];
                     let baseDate = new Date(this.selectedMonth + '-01');
                     for (let i = 0; i < 6; i++) {
@@ -251,7 +252,7 @@
                         if (i === 0) {
                             data.push(cap);
                         } else {
-                            cap += (pnlSum * 0.7); // ทบต้น 70%
+                            cap += (pnlSum * 0.7);
                             data.push(parseFloat(cap.toFixed(2)));
                         }
                     }
@@ -331,18 +332,22 @@
                     return baseDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
                 },
 
-                // ลอจิกจำลองตาราง (อ้างอิง PnL ของเดือนที่เลือก)
+                // ลอจิกจำลองตาราง
                 simMonthCapital(m) {
                     let cap = this.initialCapital;
                     let pnlSum = parseFloat(this.totalMonthlyPnl());
                     for (let i = 1; i < m; i++) {
-                        let profitCap = (pnlSum * 0.7); 
-                        cap += letCap;
+                        cap += (pnlSum * 0.7); 
                     }
                     return cap.toFixed(2);
                 },
                 simMonthProfit(m) {
                     return parseFloat(this.totalMonthlyPnl()).toFixed(2);
+                },
+                simMonthRemaining(m) {
+                    let cap = parseFloat(this.simMonthCapital(m));
+                    let profit = parseFloat(this.simMonthProfit(m));
+                    return (cap + (profit * 0.7)).toFixed(2);
                 },
                 simMonthCashout(m) {
                     return (this.cashoutUsd() * this.exRate).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
