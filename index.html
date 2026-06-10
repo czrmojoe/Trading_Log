@@ -30,28 +30,28 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="text-sm font-medium text-gray-600">ทุนตั้งต้นพอร์ต ($)</label>
-                    <input type="number" x-model="initialCapital" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="initialCapital" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">อัตราแลกเปลี่ยน (THB/USD)</label>
-                    <input type="number" x-model="exRate" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="exRate" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">เงินเดือน (THB)</label>
-                    <input type="number" x-model="salary" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="salary" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">รายจ่ายรวม/หนี้สิน (THB)</label>
-                    <input type="number" x-model="totalExpenses" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="totalExpenses" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">เงินเติมพอร์ตขั้นต่ำ ($500 = 16,400 THB)</label>
-                    <input type="number" x-model="topupAmountThb" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="topupAmountThb" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
             <div class="mt-6 flex justify-end">
                 <button @click="saveSettings" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
-                    💾 บันทึกการตั้งค่า
+                    💾 บันทึกการตั้งค่าถาวร
                 </button>
             </div>
         </div>
@@ -71,7 +71,7 @@
                     <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="bankBalance().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
                 </div>
                 <div class="text-xs text-gray-400">
-                    เงินเดือน (35,000) - รายจ่าย (41,900) + Cash out
+                    เงินเดือน (<span x-text="salary.toLocaleString()"></span>) - รายจ่าย (<span x-text="totalExpenses.toLocaleString()"></span>) + Cash out
                 </div>
             </div>
 
@@ -175,14 +175,15 @@
             };
 
             return {
-                initialCapital: savedSettings.initialCapital,
-                exRate: savedSettings.exRate,
-                salary: savedSettings.salary,
-                totalExpenses: savedSettings.totalExpenses,
-                topupAmountThb: savedSettings.topupAmountThb,
+                // ใช้ .number modifier ใน html แล้ว แปลงค่าเป็นตัวเลขให้ชัวร์ด้วย parseFloat
+                initialCapital: parseFloat(savedSettings.initialCapital),
+                exRate: parseFloat(savedSettings.exRate),
+                salary: parseFloat(savedSettings.salary),
+                totalExpenses: parseFloat(savedSettings.totalExpenses),
+                topupAmountThb: parseFloat(savedSettings.topupAmountThb),
 
                 // Filter & State
-                selectedMonth: new Date().toISOString().substring(0, 7), // YYYY-MM ปัจจุบัน
+                selectedMonth: new Date().toISOString().substring(0, 7),
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
@@ -196,7 +197,7 @@
                         topupAmountThb: this.topupAmountThb
                     };
                     localStorage.setItem('tradingSettings', JSON.stringify(settings));
-                    alert('บันทึกข้อมูลตั้งต้นเรียบร้อย!');
+                    alert('บันทึกข้อมูลตั้งต้นถาวรเรียบร้อย!');
                 },
 
                 filteredLogs() {
@@ -208,20 +209,20 @@
                 },
 
                 cashoutUsd() {
-                    return parseFloat(this.totalMonthlyPnl()) * 0.3; // 30% ของ PnL รวมเดือนที่เลือก
+                    return parseFloat(this.totalMonthlyPnl()) * 0.3; 
                 },
 
                 cashoutThb() {
-                    return this.cashoutUsd() * parseFloat(this.exRate);
+                    return this.cashoutUsd() * this.exRate;
                 },
 
                 bankBalance() {
-                    const diff = parseFloat(this.salary) - parseFloat(this.totalExpenses);
+                    const diff = this.salary - this.totalExpenses;
                     return diff + this.cashoutThb();
                 },
 
                 topupAction() {
-                    return this.bankBalance() > 20000 ? parseFloat(this.topupAmountThb) : 0;
+                    return this.bankBalance() > 20000 ? this.topupAmountThb : 0;
                 },
 
                 addLog() {
@@ -236,7 +237,6 @@
                 },
 
                 removeLog(index) {
-                    // หา index ตัวจริงจาก dailyLogs แล้วลบ
                     const logToRemove = this.filteredLogs()[index];
                     const realIndex = this.dailyLogs.findIndex(log => log === logToRemove);
                     if (realIndex !== -1) {
@@ -249,9 +249,9 @@
                     localStorage.setItem('tradingLogs', JSON.stringify(this.dailyLogs));
                 },
 
-                // ลอจิกจำลองตาราง (อ้างอิง PnL ของเดือนที่เลือก)
+                // ลอจิกจำลองตาราง
                 simMonthCapital(m) {
-                    let cap = parseFloat(this.initialCapital);
+                    let cap = this.initialCapital;
                     let pnlSum = parseFloat(this.totalMonthlyPnl());
                     for (let i = 1; i < m; i++) {
                         let profitCap = (pnlSum * 0.7); 
@@ -263,14 +263,14 @@
                     return parseFloat(this.totalMonthlyPnl()).toFixed(2);
                 },
                 simMonthCashout(m) {
-                    return (this.cashoutUsd() * parseFloat(this.exRate)).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
+                    return (this.cashoutUsd() * this.exRate).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 },
                 simMonthBank(m) {
-                    let bankPerMonth = (parseFloat(this.salary) - parseFloat(this.totalExpenses)) + this.cashoutThb();
+                    let bankPerMonth = (this.salary - this.totalExpenses) + this.cashoutThb();
                     let total = 0;
                     for(let i=0; i<m; i++) {
                         total += bankPerMonth;
-                        if(total > 20000) total -= parseFloat(this.topupAmountThb);
+                        if(total > 20000) total -= this.topupAmountThb;
                     }
                     return total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 }
