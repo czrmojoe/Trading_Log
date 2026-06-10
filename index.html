@@ -21,7 +21,7 @@
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h2 class="text-lg font-semibold text-gray-700">เลือกดูข้อมูลประจำเดือน</h2>
-                <p class="text-xs text-gray-400">ข้อมูล PnL และสรุปผลจะแสดงตามเดือนที่เลือกแบบเรียลไทม์</p>
+                <p class="text-xs text-gray-400">ข้อมูล PnL, กราฟ และสรุปผลจะแสดงตามเดือนที่เลือกแบบเรียลไทม์</p>
             </div>
             <input type="month" x-model="selectedMonth" @change="updateDashboard()" class="rounded-xl border-gray-200 border p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium text-gray-700">
         </div>
@@ -136,9 +136,9 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">กราฟแสดงการเติบโตของพอร์ต ($) รายเดือน</h2>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4" x-text="'ความเคลื่อนไหว PnL รายวัน ประจำเดือน ' + selectedMonth"></h2>
             <div class="w-full h-80">
-                <canvas id="growthChart"></canvas>
+                <canvas id="pnlChart"></canvas>
             </div>
         </div>
 
@@ -148,7 +148,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b text-gray-600 text-sm">
-                            <th class="py-3 px-4">เดือนที่ (เริ่ม พ.ค. เป็นต้นไป)</th>
+                            <th class="py-3 px-4">เดือนที่จำลอง</th>
                             <th class="py-3 px-4">ทุนพอร์ตเริ่มต้น ($)</th>
                             <th class="py-3 px-4">กำไรจาก PnL ($)</th>
                             <th class="py-3 px-4">เงินในพอร์ตหลังจาก Cash out ($)</th>
@@ -191,26 +191,26 @@
                 totalExpenses: parseFloat(savedSettings.totalExpenses),
                 topupAmountThb: parseFloat(savedSettings.topupAmountThb),
 
-                selectedMonth: '2026-05',
+                selectedMonth: new Date().toISOString().substring(0, 7),
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
                 chartInstance: null,
 
                 initChart() {
-                    const ctx = document.getElementById('growthChart').getContext('2d');
+                    const ctx = document.getElementById('pnlChart').getContext('2d');
                     this.chartInstance = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: this.getChartLabels(),
                             datasets: [{
-                                label: 'เงินทุนสะสมในพอร์ต ($)',
+                                label: 'PnL สะสมรายวัน ($)',
                                 data: this.getChartData(),
-                                borderColor: '#4f46e5',
-                                backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.05)',
                                 borderWidth: 2,
                                 fill: true,
-                                tension: 0.3
+                                tension: 0.2
                             }]
                         },
                         options: {
@@ -218,7 +218,7 @@
                             maintainAspectRatio: false,
                             scales: {
                                 y: {
-                                    beginAtZero: false
+                                    beginAtZero: true
                                 }
                             }
                         }
@@ -233,30 +233,22 @@
                     }
                 },
 
+                filteredSortedLogs() {
+                    return this.dailyLogs
+                        .filter(log => log.date.startsWith(this.selectedMonth))
+                        .sort((a, b) => new Date(a.date) - new Date(b.date));
+                },
+
                 getChartLabels() {
-                    let labels = [];
-                    let baseDate = new Date(this.selectedMonth + '-01');
-                    for (let i = 0; i < 6; i++) {
-                        let d = new Date(baseDate);
-                        d.setMonth(baseDate.getMonth() + i);
-                        labels.push(d.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }));
-                    }
-                    return labels;
+                    return this.filteredSortedLogs().map(log => log.date);
                 },
 
                 getChartData() {
-                    let data = [];
-                    let cap = this.initialCapital;
-                    let pnlSum = parseFloat(this.totalMonthlyPnl());
-                    for (let i = 0; i < 6; i++) {
-                        if (i === 0) {
-                            data.push(cap);
-                        } else {
-                            cap += (pnlSum * 0.7);
-                            data.push(parseFloat(cap.toFixed(2)));
-                        }
-                    }
-                    return data;
+                    let cumulative = 0;
+                    return this.filteredSortedLogs().map(log => {
+                        cumulative += parseFloat(log.pnl);
+                        return parseFloat(cumulative.toFixed(2));
+                    });
                 },
 
                 updateDashboard() {
@@ -332,7 +324,6 @@
                     return baseDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
                 },
 
-                // ลอจิกจำลองตาราง
                 simMonthCapital(m) {
                     let cap = this.initialCapital;
                     let pnlSum = parseFloat(this.totalMonthlyPnl());
