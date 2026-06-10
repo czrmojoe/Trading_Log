@@ -45,6 +45,11 @@
                     <input type="number" x-model="topupAmountThb" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
+            <div class="mt-6 flex justify-end">
+                <button @click="saveSettings" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+                    💾 บันทึกการตั้งค่า
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -87,7 +92,7 @@
                     <input type="number" step="any" placeholder="เช่น 56.8 หรือ -20" x-model="newPnl" class="mt-1 w-full rounded-lg border-gray-200 border p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <button @click="addLog" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg shadow-sm transition">
-                    + บันทึกข้อมูล
+                    + บันทึก PnL
                 </button>
             </div>
 
@@ -155,33 +160,56 @@
 
     <script>
         function financialCalculator() {
-            return {
+            // โหลดค่าตั้งต้นจาก localStorage (ถ้ามี)
+            const savedSettings = JSON.parse(localStorage.getItem('tradingSettings')) || {
                 initialCapital: 5000,
                 profitPercent: 20,
                 exRate: 32.8,
                 salary: 35000,
                 totalExpenses: 41900,
-                topupAmountThb: 16400,
+                topupAmountThb: 16400
+            };
+
+            return {
+                initialCapital: savedSettings.initialCapital,
+                profitPercent: savedSettings.profitPercent,
+                exRate: savedSettings.exRate,
+                salary: savedSettings.salary,
+                totalExpenses: savedSettings.totalExpenses,
+                topupAmountThb: savedSettings.topupAmountThb,
 
                 // Daily PnL Tracker State
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
-                // โหลดข้อมูลจาก localStorage ถ้ามี หรือใช้ค่าเริ่มต้น
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
+
+                // บันทึกการตั้งค่าลง localStorage
+                saveSettings() {
+                    const settings = {
+                        initialCapital: this.initialCapital,
+                        profitPercent: this.profitPercent,
+                        exRate: this.exRate,
+                        salary: this.salary,
+                        totalExpenses: this.totalExpenses,
+                        topupAmountThb: this.topupAmountThb
+                    };
+                    localStorage.setItem('tradingSettings', JSON.stringify(settings));
+                    alert('บันทึกข้อมูลตั้งต้นเรียบร้อยแล้ว!');
+                },
 
                 // คำนวณเดือนแรก
                 cashoutUsd() {
-                    return (this.initialCapital * (this.profitPercent / 100)) * 0.3;
+                    return (parseFloat(this.initialCapital) * (parseFloat(this.profitPercent) / 100)) * 0.3;
                 },
                 cashoutThb() {
-                    return this.cashoutUsd() * this.exRate;
+                    return this.cashoutUsd() * parseFloat(this.exRate);
                 },
                 bankBalance() {
-                    const diff = this.salary - this.totalExpenses;
+                    const diff = parseFloat(this.salary) - parseFloat(this.totalExpenses);
                     return diff + this.cashoutThb();
                 },
                 topupAction() {
-                    return this.bankBalance() > 20000 ? this.topupAmountThb : 0;
+                    return this.bankBalance() > 20000 ? parseFloat(this.topupAmountThb) : 0;
                 },
 
                 // ลอจิก PnL รายวัน
@@ -191,44 +219,44 @@
                             date: this.newDate,
                             pnl: parseFloat(this.newPnl)
                         });
-                        this.saveToStorage();
-                        this.newPnl = ''; // Reset input
+                        this.saveLogsToStorage();
+                        this.newPnl = '';
                     }
                 },
                 removeLog(index) {
                     this.dailyLogs.splice(index, 1);
-                    this.saveToStorage();
+                    this.saveLogsToStorage();
                 },
                 totalDailyPnl() {
                     return this.dailyLogs.reduce((sum, log) => sum + parseFloat(log.pnl), 0).toFixed(2);
                 },
-                saveToStorage() {
+                saveLogsToStorage() {
                     localStorage.setItem('tradingLogs', JSON.stringify(this.dailyLogs));
                 },
 
                 // ลอจิกจำลองตาราง
                 calculateMonthCapital(m) {
-                    let cap = this.initialCapital;
+                    let cap = parseFloat(this.initialCapital);
                     for (let i = 1; i < m; i++) {
-                        let profit = cap * (this.profitPercent / 100);
+                        let profit = cap * (parseFloat(this.profitPercent) / 100);
                         cap += (profit * 0.7);
                     }
                     return cap.toFixed(2);
                 },
                 calculateMonthProfit(m) {
                     let cap = parseFloat(this.calculateMonthCapital(m));
-                    return (cap * (this.profitPercent / 100)).toFixed(2);
+                    return (cap * (parseFloat(this.profitPercent) / 100)).toFixed(2);
                 },
                 calculateMonthCashout(m) {
                     let profit = parseFloat(this.calculateMonthProfit(m));
-                    return (profit * 0.3 * this.exRate).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
+                    return (profit * 0.3 * parseFloat(this.exRate)).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 },
                 calculateMonthBank(m) {
-                    let bankPerMonth = (this.salary - this.totalExpenses) + (parseFloat(this.calculateMonthProfit(m)) * 0.3 * this.exRate);
+                    let bankPerMonth = (parseFloat(this.salary) - parseFloat(this.totalExpenses)) + (parseFloat(this.calculateMonthProfit(m)) * 0.3 * parseFloat(this.exRate));
                     let total = 0;
                     for(let i=0; i<m; i++) {
                         total += bankPerMonth;
-                        if(total > 20000) total -= 16400;
+                        if(total > 20000) total -= parseFloat(this.topupAmountThb);
                     }
                     return total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 }
