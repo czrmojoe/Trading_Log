@@ -2,320 +2,235 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trading Log Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial & Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --primary: #3b82f6;
-            --success: #10b981;
-            --danger: #f43f5e;
-            --border: #334155;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 12px;
-        }
-
-        .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; margin: 15px 0 25px 0; font-weight: 500; font-size: 24px; }
-
-        .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-
-        @media (min-width: 960px) {
-            .grid { grid-template-columns: 360px 1fr; }
-            .full-width { grid-column: 1 / -1; }
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        h3 { margin-top: 0; margin-bottom: 16px; font-size: 16px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-
-        .form-group { margin-bottom: 14px; }
-        label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-sub); }
-        input {
-            width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border);
-            border-radius: 8px; color: white; font-size: 16px; -webkit-appearance: none;
-        }
-        
-        button {
-            width: 100%; padding: 14px; background: var(--primary); color: white; border: none;
-            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
-        button:hover, button:active { background: #2563eb; }
-
-        .btn-secondary { background: #475569; padding: 10px; font-size: 14px; margin-top: 8px;}
-        .btn-secondary:hover { background: #334155; }
-
-        .chart-header { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-        @media (min-width: 600px) {
-            .chart-header { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
-
-        .filter-group { display: flex; gap: 8px; align-items: center; width: 100%; }
-        .filter-group input { padding: 8px; font-size: 14px; flex: 1; }
-        .btn-filter { width: auto; padding: 8px 14px; background: #475569; font-size: 14px; }
-
-        .chart-container { position: relative; height: 280px; width: 100%; }
-        @media (min-width: 768px) { .chart-container { height: 360px; } }
-
-        .table-container { 
-            margin-top: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; 
-            border-radius: 8px; border: 1px solid var(--border);
-        }
-        
-        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 500px; }
-        th { padding: 12px; background: #131d2e; color: var(--text-sub); font-size: 13px; }
-        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        .win { color: var(--success); font-weight: 600; }
-        .loss { color: var(--danger); font-weight: 600; }
-        
-        .btn-delete { background: none; border: none; color: #64748b; cursor: pointer; padding: 8px; font-size: 16px; }
-        .btn-delete:hover { color: var(--danger); }
-        
-        .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        body { font-family: 'Prompt', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen p-6">
 
-<div class="container">
-    <h1><i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Trading Log</h1>
+    <div class="max-w-4xl mx-auto" x-data="financialCalculator()">
+        
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📈 Financial & Trading Dashboard</h1>
 
-    <div class="grid">
-        <div class="card">
-            <h3><i class="fa-solid fa-square-plus"></i> เพิ่มบันทึกผลการเทรด</h3>
-            <form id="tradeForm">
-                <div class="form-group">
-                    <label>วันที่</label>
-                    <input type="date" id="dateInput" required>
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">ตั้งค่าข้อมูลตั้งต้น</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-600">ทุนตั้งต้นพอร์ต ($)</label>
+                    <input type="number" x-model="initialCapital" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <div class="form-group">
-                    <label>ทุนปัจจุบัน (Capital)</label>
-                    <input type="number" id="capInput" placeholder="0.00" step="0.01" inputmode="decimal" required>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">เป้ากำไรต่อเดือน (%)</label>
+                    <input type="number" x-model="profitPercent" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <div class="form-group">
-                    <label>กำไร/ขาดทุน (PnL)</label>
-                    <input type="number" id="pnlInput" placeholder="+ / - 0.00" step="0.01" inputmode="decimal" required>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">อัตราแลกเปลี่ยน (THB/USD)</label>
+                    <input type="number" x-model="exRate" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <button type="submit"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
-            </form>
-
-            <div class="backup-zone">
-                <button class="btn-secondary" onclick="exportData()"><i class="fa-solid fa-download"></i> สำรองข้อมูล</button>
-                <button class="btn-secondary" onclick="importData()"><i class="fa-solid fa-upload"></i> ซิงค์เข้าเครื่อง</button>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">เงินเดือน (THB)</label>
+                    <input type="number" x-model="salary" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">รายจ่ายรวม/หนี้สิน (THB)</label>
+                    <input type="number" x-model="totalExpenses" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600">เงินเติมพอร์ตขั้นต่ำ ($500 = 16,400 THB)</label>
+                    <input type="number" x-model="topupAmountThb" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="chart-header">
-                <h3><i class="fa-solid fa-chart-bar"></i> ประสิทธิภาพพอร์ต</h3>
-                <div class="filter-group">
-                    <input type="date" id="filterStart">
-                    <span style="color: var(--text-sub)">-</span>
-                    <input type="date" id="filterEnd">
-                    <button class="btn-filter" onclick="applyFilter()">กรอง</button>
-                    <button class="btn-filter" onclick="resetData()" style="background: #334155;"><i class="fa-solid fa-rotate-left"></i></button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-md">
+                <h3 class="text-sm font-light opacity-90">กำไรพอร์ตเดือนนี้ (30% Cashout)</h3>
+                <div class="text-2xl font-semibold mt-1" x-text="cashoutThb().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
+                <div class="text-xs opacity-80 mt-2" x-text="'($' + cashoutUsd() + ')'"></div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">สถานะเงินสดคงเหลือในบัญชี</h3>
+                    <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="bankBalance().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
+                </div>
+                <div class="text-xs text-gray-400 mt-4">
+                    เงินเดือน (35,000) - รายจ่าย (41,900) + Cash out
                 </div>
             </div>
-            <div class="chart-container">
-                <canvas id="mainChart"></canvas>
+
+            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">เงินเติมพอร์ตเดือนนี้</h3>
+                    <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="topupAction().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
+                </div>
+                <div class="text-xs text-gray-400 mt-4" x-text="bankBalance() > 20000 ? 'หักเติมพอร์ต $500 เรียบร้อย' : 'เงินคงเหลือไม่ถึงเกณฑ์เติมพอร์ต'">
+                </div>
             </div>
         </div>
 
-        <div class="card full-width">
-            <h3><i class="fa-solid fa-list-ul"></i> ประวัติทั้งหมด</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">บันทึกผลกำไร/ขาดทุน (PnL) รายวัน</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl items-end">
+                <div>
+                    <label class="text-xs font-medium text-gray-600">วันที่</label>
+                    <input type="date" x-model="newDate" class="mt-1 w-full rounded-lg border-gray-200 border p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs font-medium text-gray-600">กำไร/ขาดทุนสะสมของวันนั้น ($ / PnL)</label>
+                    <input type="number" step="any" placeholder="เช่น 56.8 หรือ -20" x-model="newPnl" class="mt-1 w-full rounded-lg border-gray-200 border p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button @click="addLog" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg shadow-sm transition">
+                    + บันทึกข้อมูล
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-xl mb-6">
+                <span class="text-sm font-medium text-indigo-900">ยอดรวม PnL ที่บันทึกไว้ของเดือนนี้:</span>
+                <span class="text-lg font-bold" :class="totalDailyPnl() >= 0 ? 'text-green-600' : 'text-red-600'" x-text="totalDailyPnl() + ' $'"></span>
+            </div>
+
+            <div class="overflow-x-auto max-h-60 overflow-y-auto border rounded-lg">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-100 sticky top-0 text-xs text-gray-600">
                         <tr>
-                            <th>วันที่</th>
-                            <th>เงินทุน (Capital)</th>
-                            <th>กำไร/ขาดทุน (PnL)</th>
-                            <th>% กำไร</th>
-                            <th style="width: 40px;"></th>
+                            <th class="py-2 px-4">วันที่</th>
+                            <th class="py-2 px-4">PnL ($)</th>
+                            <th class="py-2 px-4 w-16">ลบ</th>
                         </tr>
                     </thead>
-                    <tbody id="tableBody"></tbody>
+                    <tbody>
+                        <template x-for="(log, index) in dailyLogs">
+                            <tr class="border-b text-sm text-gray-700 hover:bg-gray-50">
+                                <td class="py-2 px-4" x-text="log.date"></td>
+                                <td class="py-2 px-4 font-medium" :class="log.pnl >= 0 ? 'text-green-600' : 'text-red-600'" x-text="(log.pnl >= 0 ? '+' : '') + log.pnl"></td>
+                                <td class="py-2 px-4">
+                                    <button @click="removeLog(index)" class="text-red-500 hover:text-red-700 text-xs">ลบ</button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="dailyLogs.length === 0">
+                            <td colspan="3" class="py-4 text-center text-gray-400 text-sm">ยังไม่มีข้อมูล PnL รายวัน</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
+
+        <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">ตารางจำลองการเติบโต (ทบต้นรายเดือน)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b text-gray-600 text-sm">
+                            <th class="py-3 px-4">เดือนที่</th>
+                            <th class="py-3 px-4">ทุนพอร์ตเริ่มต้น ($)</th>
+                            <th class="py-3 px-4">กำไร 20% ($)</th>
+                            <th class="py-3 px-4">Cash out (THB)</th>
+                            <th class="py-3 px-4">เงินเก็บธนาคารสุทธิ (THB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="month in 6">
+                            <tr class="border-b text-sm text-gray-700 hover:bg-gray-50">
+                                <td class="py-3 px-4" x-text="month"></td>
+                                <td class="py-3 px-4" x-text="calculateMonthCapital(month)"></td>
+                                <td class="py-3 px-4" x-text="calculateMonthProfit(month)"></td>
+                                <td class="py-3 px-4" x-text="calculateMonthCashout(month)"></td>
+                                <td class="py-3 px-4" x-text="calculateMonthBank(month)"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-</div>
 
-<script>
-    let tradeLogs = JSON.parse(localStorage.getItem('tradeLogs')) || [];
+    <script>
+        function financialCalculator() {
+            return {
+                initialCapital: 5000,
+                profitPercent: 20,
+                exRate: 32.8,
+                salary: 35000,
+                totalExpenses: 41900,
+                topupAmountThb: 16400,
 
-    document.getElementById('dateInput').valueAsDate = new Date();
-    let chartObj = null;
+                // Daily PnL Tracker State
+                newDate: new Date().toISOString().substring(0, 10),
+                newPnl: '',
+                dailyLogs: [
+                    { date: '2026-06-09', pnl: 56.8 },
+                    { date: '2026-06-08', pnl: 48.0 }
+                ],
 
-    function updateChart(dataArray) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        dataArray.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        const labels = dataArray.map(item => item.date);
-        const capData = dataArray.map(item => item.capital);
-        const pnlData = dataArray.map(item => item.pnl);
-
-        if (chartObj) chartObj.destroy();
-
-        chartObj = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Capital',
-                        data: capData,
-                        backgroundColor: '#3b82f6',
-                        categoryPercentage: 0.6,
-                        barPercentage: 0.8
-                    },
-                    {
-                        label: 'PnL',
-                        data: pnlData,
-                        backgroundColor: pnlData.map(v => v >= 0 ? '#10b981' : '#f43f5e'),
-                        categoryPercentage: 0.6,
-                        barPercentage: 0.8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
-                    y: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: '#334155' } }
+                // คำนวณเดือนแรก
+                cashoutUsd() {
+                    return (this.initialCapital * (this.profitPercent / 100)) * 0.3;
                 },
-                plugins: {
-                    legend: { labels: { color: '#f8fafc', font: { size: 11 } }, position: 'top' }
+                cashoutThb() {
+                    return this.cashoutUsd() * this.exRate;
+                },
+                bankBalance() {
+                    const diff = this.salary - this.totalExpenses;
+                    return diff + this.cashoutThb();
+                },
+                topupAction() {
+                    return this.bankBalance() > 20000 ? this.topupAmountThb : 0;
+                },
+
+                // ลอจิก PnL รายวัน
+                addLog() {
+                    if (this.newDate && this.newPnl !== '') {
+                        this.dailyLogs.unshift({
+                            date: this.newDate,
+                            pnl: parseFloat(this.newPnl)
+                        });
+                        this.newPnl = ''; // Reset input
+                    }
+                },
+                removeLog(index) {
+                    this.dailyLogs.splice(index, 1);
+                },
+                totalDailyPnl() {
+                    return this.dailyLogs.reduce((sum, log) => sum + parseFloat(log.pnl), 0).toFixed(2);
+                },
+
+                // ลอจิกจำลองตาราง
+                calculateMonthCapital(m) {
+                    let cap = this.initialCapital;
+                    for (let i = 1; i < m; i++) {
+                        let profit = cap * (this.profitPercent / 100);
+                        cap += (profit * 0.7); // ทบต้น 70%
+                    }
+                    return cap.toFixed(2);
+                },
+                calculateMonthProfit(m) {
+                    let cap = parseFloat(this.calculateMonthCapital(m));
+                    return (cap * (this.profitPercent / 100)).toFixed(2);
+                },
+                calculateMonthCashout(m) {
+                    let profit = parseFloat(this.calculateMonthProfit(m));
+                    return (profit * 0.3 * this.exRate).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
+                },
+                calculateMonthBank(m) {
+                    let bankPerMonth = (this.salary - this.totalExpenses) + (parseFloat(this.calculateMonthProfit(m)) * 0.3 * this.exRate);
+                    let total = 0;
+                    for(let i=0; i<m; i++) {
+                        total += bankPerMonth;
+                        if(total > 20000) total -= 16400;
+                    }
+                    return total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 }
             }
-        });
-    }
-
-    function updateTable(dataArray) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        const sorted = [...dataArray].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        sorted.forEach((item) => {
-            const percent = item.capital ? ((item.pnl / item.capital) * 100).toFixed(2) : 0;
-            const row = `
-                <tr>
-                    <td>${item.date}</td>
-                    <td>${item.capital.toLocaleString()}</td>
-                    <td class="${item.pnl >= 0 ? 'win' : 'loss'}">
-                        ${item.pnl >= 0 ? '+' : ''}${item.pnl.toLocaleString()}
-                    </td>
-                    <td class="${item.pnl >= 0 ? 'win' : 'loss'}">${percent}%</td>
-                    <td>
-                        <button class="btn-delete" onclick="deleteLog('${item.date}')">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
-
-    document.getElementById('tradeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const date = document.getElementById('dateInput').value;
-        const capital = parseFloat(document.getElementById('capInput').value);
-        const pnl = parseFloat(document.getElementById('pnlInput').value);
-
-        const existingIdx = tradeLogs.findIndex(l => l.date === date);
-        if(existingIdx > -1) {
-            tradeLogs[existingIdx] = { date, capital, pnl };
-        } else {
-            tradeLogs.push({ date, capital, pnl });
         }
-
-        saveAndRefresh();
-        document.getElementById('capInput').value = '';
-        document.getElementById('pnlInput').value = '';
-        document.getElementById('dateInput').valueAsDate = new Date();
-    });
-
-    function deleteLog(date) {
-        if(confirm('ต้องการลบข้อมูลวันที่ ' + date + '?')) {
-            tradeLogs = tradeLogs.filter(l => l.date !== date);
-            saveAndRefresh();
-        }
-    }
-
-    function applyFilter() {
-        const start = document.getElementById('filterStart').value;
-        const end = document.getElementById('filterEnd').value;
-        if(!start || !end) return alert('กรุณาระบุช่วงวันที่');
-
-        const filtered = tradeLogs.filter(l => l.date >= start && l.date <= end);
-        updateChart(filtered);
-        updateTable(filtered);
-    }
-
-    function saveAndRefresh() {
-        localStorage.setItem('tradeLogs', JSON.stringify(tradeLogs));
-        updateChart(tradeLogs);
-        updateTable(tradeLogs);
-    }
-
-    function resetData() {
-        document.getElementById('filterStart').value = '';
-        document.getElementById('filterEnd').value = '';
-        saveAndRefresh();
-    }
-
-    // ฟังก์ชันส่งออกข้อความสตรีมข้อมูลเพื่อนำไปใช้ย้ายเครื่อง
-    function exportData() {
-        if(tradeLogs.length === 0) return alert('ไม่มีข้อมูลให้สำรอง');
-        const dataStr = JSON.stringify(tradeLogs);
-        navigator.clipboard.writeText(dataStr).then(() => {
-            alert('คัดลอกรหัสข้อมูลลงคลิปบอร์ดแล้ว! สามารถนำรหัสนี้ไปส่งในไลน์เพื่อใช้ป้อนเข้ามือถือได้เลย');
-        }).catch(() => {
-            alert('รหัสข้อมูลสำหรับการสำรองคือ:\n\n' + dataStr);
-        });
-    }
-
-    // ฟังก์ชันนำเข้าข้อมูลจากเครื่องอื่น
-    function importData() {
-        const dataStr = prompt('วางรหัสข้อมูลที่ได้จากการสำรองข้อมูลเพื่อซิงค์เข้าเครื่องนี้:');
-        if(!dataStr) return;
-        try {
-            const parsed = JSON.parse(dataStr);
-            if(Array.isArray(parsed)) {
-                tradeLogs = parsed;
-                saveAndRefresh();
-                alert('ซิงค์ข้อมูลเรียบร้อยแล้ว!');
-            } else {
-                alert('รูปแบบข้อมูลไม่ถูกต้อง');
-            }
-        } catch(e) {
-            alert('เกิดข้อผิดพลาดในการอ่านข้อมูล');
-        }
-    }
-
-    saveAndRefresh();
-</script>
-
+    </script>
 </body>
 </html>
