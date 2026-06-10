@@ -166,10 +166,8 @@
                 // Daily PnL Tracker State
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
-                dailyLogs: [
-                    { date: '2026-06-09', pnl: 56.8 },
-                    { date: '2026-06-08', pnl: 48.0 }
-                ],
+                // โหลดข้อมูลจาก localStorage ถ้ามี หรือใช้ค่าเริ่มต้น
+                dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
 
                 // คำนวณเดือนแรก
                 cashoutUsd() {
@@ -193,14 +191,19 @@
                             date: this.newDate,
                             pnl: parseFloat(this.newPnl)
                         });
+                        this.saveToStorage();
                         this.newPnl = ''; // Reset input
                     }
                 },
                 removeLog(index) {
                     this.dailyLogs.splice(index, 1);
+                    this.saveToStorage();
                 },
                 totalDailyPnl() {
                     return this.dailyLogs.reduce((sum, log) => sum + parseFloat(log.pnl), 0).toFixed(2);
+                },
+                saveToStorage() {
+                    localStorage.setItem('tradingLogs', JSON.stringify(this.dailyLogs));
                 },
 
                 // ลอจิกจำลองตาราง
@@ -208,7 +211,7 @@
                     let cap = this.initialCapital;
                     for (let i = 1; i < m; i++) {
                         let profit = cap * (this.profitPercent / 100);
-                        cap += (profit * 0.7); // ทบต้น 70%
+                        cap += (profit * 0.7);
                     }
                     return cap.toFixed(2);
                 },
