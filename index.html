@@ -26,6 +26,22 @@
             <input type="month" x-model="selectedMonth" @change="updateDashboard()" class="rounded-xl border-gray-200 border p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium text-gray-700">
         </div>
 
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+            <div>
+                <h2 class="text-base font-semibold text-gray-700">สำรองและกู้คืนข้อมูล (Backup & Restore)</h2>
+                <p class="text-xs text-gray-400">คุณสามารถ Export ข้อมูลเก็บไว้ หรือ Import ข้อมูลเก่ากลับมาได้</p>
+            </div>
+            <div class="flex gap-3">
+                <button @click="exportData" class="bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm transition">
+                    📥 Export JSON
+                </button>
+                <label class="bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer">
+                    📤 Import JSON
+                    <input type="file" @change="importData" accept=".json" class="hidden">
+                </label>
+            </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
             <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">ตั้งค่าข้อมูลตั้งต้น</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -82,6 +98,57 @@
                     <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="topupAction().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
                 </div>
                 <div class="text-xs text-gray-400" x-text="bankBalance() > 20000 ? 'หักเติมพอร์ต $500 เรียบร้อย' : 'เงินคงเหลือไม่ถึงเกณฑ์เติมพอร์ต'">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col justify-between h-56">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">คำนวณขนาด Lot ที่แนะนำ</h2>
+                    <p class="text-xs text-gray-400 mb-4">แนะนำขนาด Lot ต่อไม้ (สูตร: ทุนสะสมปัจจุบัน ($) ÷ 12,500)</p>
+                    
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-sm text-gray-500">ทุนสะสม:</span>
+                        <span class="text-base font-medium text-gray-700" x-text="'$' + currentPortfolioCapital().toFixed(2)"></span>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-2">
+                        <span class="text-sm text-gray-500">ขนาด Lot ที่แนะนำ:</span>
+                        <span class="text-2xl font-bold text-indigo-600" x-text="suggestedLotSize().toFixed(2)"></span>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400 bg-gray-50 p-2.5 rounded-lg mt-4 border border-gray-100">
+                    อิงตามขนาดพอร์ตจริงที่ซิงก์กับเงินในพอร์ตหลังจากหัก Cash out แล้ว
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 mb-1">สถานะการโปะหนี้</h2>
+                    <p class="text-xs text-gray-400 mb-4">โปะส่วนเกินเงินธนาคาร (หลังหักเติมพอร์ต) ที่เกิน 10,000 บาท</p>
+
+                    <div class="text-xs font-medium text-gray-500 mb-2 flex justify-between">
+                        <span>เงินสดเหลือไปโปะหนี้:</span>
+                        <span class="text-sm font-bold" :class="remainingForDebt() > 0 ? 'text-green-600' : 'text-gray-600'" x-text="remainingForDebt().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <template x-for="(debt, idx) in debts">
+                            <div class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg border border-gray-100">
+                                <span class="font-medium text-gray-700" x-text="debt.name"></span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-400" x-text="debt.amount.toLocaleString() + ' THB'"></span>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full" 
+                                          :class="getDebtPaid(idx) > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                                          x-text="'โปะ: ' + getDebtPaid(idx).toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-400 mt-4 border-t pt-3 flex justify-between">
+                    <span>หนี้รวมทั้งสิ้น:</span>
+                    <span class="font-semibold text-gray-700" x-text="totalDebtAmount().toLocaleString() + ' THB'"></span>
                 </div>
             </div>
         </div>
@@ -197,6 +264,12 @@
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
                 chartInstance: null,
 
+                debts: [
+                    { name: 'หนี้ 1', amount: 33079 },
+                    { name: 'หนี้ 2', amount: 2332 },
+                    { name: 'หนี้ 3', amount: 161000 }
+                ],
+
                 initChart() {
                     const ctx = document.getElementById('pnlChart').getContext('2d');
                     this.chartInstance = new Chart(ctx, {
@@ -292,6 +365,48 @@
                     return this.bankBalance() > 20000 ? this.topupAmountThb : 0;
                 },
 
+                // คำนวณเงินสดธนาคารสุทธิหลังจากหักเติมพอร์ตแล้ว
+                netBankRemaining() {
+                    return Math.max(0, this.bankBalance() - this.topupAction());
+                },
+
+                // เงินส่วนเกิน 10,000 บาทที่จะนำไปโปะหนี้
+                remainingForDebt() {
+                    return Math.max(0, this.netBankRemaining() - 10000);
+                },
+
+                totalDebtAmount() {
+                    return this.debts.reduce((acc, d) => acc + d.amount, 0);
+                },
+
+                getDebtPaid(index) {
+                    let remaining = this.remainingForDebt();
+                    let paid = 0;
+                    for(let i = 0; i <= index; i++) {
+                        let debtVal = this.debts[i].amount;
+                        if (remaining >= debtVal) {
+                            paid = debtVal;
+                            remaining -= debtVal;
+                        } else {
+                            paid = remaining;
+                            remaining = 0;
+                        }
+                        if (i === index) return paid;
+                    }
+                    return 0;
+                },
+
+                // คำนวณเงินพอร์ตสะสมปัจจุบัน ($) อิงจากเงินในพอร์ตหลังจากหัก Cash out แล้ว
+                currentPortfolioCapital() {
+                    // เงินในพอร์ตคงเหลือ = ทุนตั้งต้น + 70% ของกำไร PnL
+                    return this.initialCapital + (parseFloat(this.totalMonthlyPnl()) * 0.7);
+                },
+
+                // คำนวณ Lot Size แนะนำ
+                suggestedLotSize() {
+                    return this.currentPortfolioCapital() / 12500;
+                },
+
                 addLog() {
                     if (this.newDate && this.newPnl !== '') {
                         this.dailyLogs.unshift({
@@ -351,6 +466,61 @@
                         if(total > 20000) total -= this.topupAmountThb;
                     }
                     return total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
+                },
+
+                // Export Backup
+                exportData() {
+                    const data = {
+                        settings: {
+                            initialCapital: this.initialCapital,
+                            exRate: this.exRate,
+                            salary: this.salary,
+                            totalExpenses: this.totalExpenses,
+                            topupAmountThb: this.topupAmountThb
+                        },
+                        logs: this.dailyLogs
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `trading-dashboard-backup-${new Date().toISOString().substring(0,10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                },
+
+                // Import Backup
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.settings && data.logs) {
+                                // อัปเดต Settings
+                                this.initialCapital = data.settings.initialCapital || 5000;
+                                this.exRate = data.settings.exRate || 32.8;
+                                this.salary = data.settings.salary || 35000;
+                                this.totalExpenses = data.settings.totalExpenses || 41900;
+                                this.topupAmountThb = data.settings.topupAmountThb || 16400;
+                                
+                                // อัปเดต Logs
+                                this.dailyLogs = data.logs;
+                                this.saveLogsToStorage();
+                                this.saveSettings();
+                                
+                                this.updateDashboard();
+                                alert('นำเข้าข้อมูลสำรองเรียบร้อยแล้ว!');
+                            } else {
+                                alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
+                            }
+                        } catch (err) {
+                            alert('เกิดข้อผิดพลาดในการอ่านไฟล์: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
                 }
             }
         }
