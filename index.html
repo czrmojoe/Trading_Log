@@ -6,6 +6,7 @@
     <title>Financial & Trading Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Prompt', sans-serif; }
@@ -13,7 +14,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
 
-    <div class="max-w-4xl mx-auto" x-data="financialCalculator()">
+    <div class="max-w-4xl mx-auto" x-data="financialCalculator()" x-init="initChart()">
         
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📈 Financial & Trading Dashboard</h1>
 
@@ -22,7 +23,7 @@
                 <h2 class="text-lg font-semibold text-gray-700">เลือกดูข้อมูลประจำเดือน</h2>
                 <p class="text-xs text-gray-400">ข้อมูล PnL และสรุปผลจะแสดงตามเดือนที่เลือกแบบเรียลไทม์</p>
             </div>
-            <input type="month" x-model="selectedMonth" class="rounded-xl border-gray-200 border p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium text-gray-700">
+            <input type="month" x-model="selectedMonth" @change="updateDashboard()" class="rounded-xl border-gray-200 border p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium text-gray-700">
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
@@ -30,23 +31,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="text-sm font-medium text-gray-600">ทุนตั้งต้นพอร์ต ($)</label>
-                    <input type="number" x-model.number="initialCapital" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="initialCapital" @input="updateDashboard()" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">อัตราแลกเปลี่ยน (THB/USD)</label>
-                    <input type="number" x-model.number="exRate" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="exRate" @input="updateDashboard()" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">เงินเดือน (THB)</label>
-                    <input type="number" x-model.number="salary" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="salary" @input="updateDashboard()" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">รายจ่ายรวม/หนี้สิน (THB)</label>
-                    <input type="number" x-model.number="totalExpenses" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="totalExpenses" @input="updateDashboard()" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">เงินเติมพอร์ตขั้นต่ำ ($500 = 16,400 THB)</label>
-                    <input type="number" x-model.number="topupAmountThb" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" x-model.number="topupAmountThb" @input="updateDashboard()" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
             <div class="mt-6 flex justify-end">
@@ -134,13 +135,20 @@
             </div>
         </div>
 
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">กราฟแสดงการเติบโตของพอร์ต ($) รายเดือน</h2>
+            <div class="w-full h-80">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">ตารางจำลองการเติบโต (ทบต้นตาม PnL เดือนที่เลือก)</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b text-gray-600 text-sm">
-                            <th class="py-3 px-4">เดือนที่จำลอง</th>
+                            <th class="py-3 px-4">เดือนที่ (เริ่ม พ.ค. เป็นต้นไป)</th>
                             <th class="py-3 px-4">ทุนพอร์ตเริ่มต้น ($)</th>
                             <th class="py-3 px-4">กำไรจาก PnL ($)</th>
                             <th class="py-3 px-4">Cash out (THB)</th>
@@ -150,7 +158,7 @@
                     <tbody>
                         <template x-for="m in 6">
                             <tr class="border-b text-sm text-gray-700 hover:bg-gray-50">
-                                <td class="py-3 px-4" x-text="m"></td>
+                                <td class="py-3 px-4" x-text="getMonthLabel(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthCapital(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthProfit(m)"></td>
                                 <td class="py-3 px-4" x-text="simMonthCashout(m)"></td>
@@ -175,18 +183,84 @@
             };
 
             return {
-                // ใช้ .number modifier ใน html แล้ว แปลงค่าเป็นตัวเลขให้ชัวร์ด้วย parseFloat
                 initialCapital: parseFloat(savedSettings.initialCapital),
                 exRate: parseFloat(savedSettings.exRate),
                 salary: parseFloat(savedSettings.salary),
                 totalExpenses: parseFloat(savedSettings.totalExpenses),
                 topupAmountThb: parseFloat(savedSettings.topupAmountThb),
 
-                // Filter & State
-                selectedMonth: new Date().toISOString().substring(0, 7),
+                selectedMonth: '2026-05', // เริ่มต้นที่ พฤษภาคม 2026
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
+                chartInstance: null,
+
+                initChart() {
+                    const ctx = document.getElementById('growthChart').getContext('2d');
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: this.getChartLabels(),
+                            datasets: [{
+                                label: 'เงินทุนสะสมในพอร์ต ($)',
+                                data: this.getChartData(),
+                                borderColor: '#4f46e5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    });
+                },
+
+                updateChart() {
+                    if (this.chartInstance) {
+                        this.chartInstance.data.labels = this.getChartLabels();
+                        this.chartInstance.data.datasets[0].data = this.getChartData();
+                        this.chartInstance.update();
+                    }
+                },
+
+                getChartLabels() {
+                    // สร้าง Label 6 เดือน เริ่มจากเดือนที่เลือก
+                    let labels = [];
+                    let baseDate = new Date(this.selectedMonth + '-01');
+                    for (let i = 0; i < 6; i++) {
+                        let d = new Date(baseDate);
+                        d.setMonth(baseDate.getMonth() + i);
+                        labels.push(d.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' }));
+                    }
+                    return labels;
+                },
+
+                getChartData() {
+                    let data = [];
+                    let cap = this.initialCapital;
+                    let pnlSum = parseFloat(this.totalMonthlyPnl());
+                    for (let i = 0; i < 6; i++) {
+                        if (i === 0) {
+                            data.push(cap);
+                        } else {
+                            cap += (pnlSum * 0.7); // ทบต้น 70%
+                            data.push(parseFloat(cap.toFixed(2)));
+                        }
+                    }
+                    return data;
+                },
+
+                updateDashboard() {
+                    this.updateChart();
+                },
 
                 saveSettings() {
                     const settings = {
@@ -233,6 +307,7 @@
                         });
                         this.saveLogsToStorage();
                         this.newPnl = '';
+                        this.updateDashboard();
                     }
                 },
 
@@ -242,6 +317,7 @@
                     if (realIndex !== -1) {
                         this.dailyLogs.splice(realIndex, 1);
                         this.saveLogsToStorage();
+                        this.updateDashboard();
                     }
                 },
 
@@ -249,13 +325,19 @@
                     localStorage.setItem('tradingLogs', JSON.stringify(this.dailyLogs));
                 },
 
-                // ลอจิกจำลองตาราง
+                getMonthLabel(m) {
+                    let baseDate = new Date(this.selectedMonth + '-01');
+                    baseDate.setMonth(baseDate.getMonth() + (m - 1));
+                    return baseDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+                },
+
+                // ลอจิกจำลองตาราง (อ้างอิง PnL ของเดือนที่เลือก)
                 simMonthCapital(m) {
                     let cap = this.initialCapital;
                     let pnlSum = parseFloat(this.totalMonthlyPnl());
                     for (let i = 1; i < m; i++) {
                         let profitCap = (pnlSum * 0.7); 
-                        cap += profitCap;
+                        cap += letCap;
                     }
                     return cap.toFixed(2);
                 },
