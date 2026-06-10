@@ -17,16 +17,20 @@
         
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📈 Financial & Trading Dashboard</h1>
 
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-700">เลือกดูข้อมูลประจำเดือน</h2>
+                <p class="text-xs text-gray-400">ข้อมูล PnL และสรุปผลจะแสดงตามเดือนที่เลือกแบบเรียลไทม์</p>
+            </div>
+            <input type="month" x-model="selectedMonth" class="rounded-xl border-gray-200 border p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium text-gray-700">
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
             <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">ตั้งค่าข้อมูลตั้งต้น</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="text-sm font-medium text-gray-600">ทุนตั้งต้นพอร์ต ($)</label>
                     <input type="number" x-model="initialCapital" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div>
-                    <label class="text-sm font-medium text-gray-600">เป้ากำไรต่อเดือน (%)</label>
-                    <input type="number" x-model="profitPercent" class="mt-1 w-full rounded-lg border-gray-200 border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-600">อัตราแลกเปลี่ยน (THB/USD)</label>
@@ -53,34 +57,36 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-md">
-                <h3 class="text-sm font-light opacity-90">กำไรพอร์ตเดือนนี้ (30% Cashout)</h3>
-                <div class="text-2xl font-semibold mt-1" x-text="cashoutThb().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
-                <div class="text-xs opacity-80 mt-2" x-text="'($' + cashoutUsd() + ')'"></div>
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-md flex flex-col justify-between h-40">
+                <div>
+                    <h3 class="text-sm font-light opacity-90">กำไรจาก PnL เดือนนี้ (30% Cashout)</h3>
+                    <div class="text-2xl font-semibold mt-1" x-text="cashoutThb().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
+                </div>
+                <div class="text-xs opacity-80" x-text="'รวม PnL เดือนนี้: ' + totalMonthlyPnl() + ' $ / (30% คือ $' + cashoutUsd().toFixed(2) + ')'"></div>
             </div>
             
-            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between h-40">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500">สถานะเงินสดคงเหลือในบัญชี</h3>
                     <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="bankBalance().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
                 </div>
-                <div class="text-xs text-gray-400 mt-4">
+                <div class="text-xs text-gray-400">
                     เงินเดือน (35,000) - รายจ่าย (41,900) + Cash out
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex flex-col justify-between h-40">
                 <div>
                     <h3 class="text-sm font-medium text-gray-500">เงินเติมพอร์ตเดือนนี้</h3>
                     <div class="text-2xl font-semibold text-gray-800 mt-1" x-text="topupAction().toLocaleString('th-TH', { style: 'currency', currency: 'THB' })"></div>
                 </div>
-                <div class="text-xs text-gray-400 mt-4" x-text="bankBalance() > 20000 ? 'หักเติมพอร์ต $500 เรียบร้อย' : 'เงินคงเหลือไม่ถึงเกณฑ์เติมพอร์ต'">
+                <div class="text-xs text-gray-400" x-text="bankBalance() > 20000 ? 'หักเติมพอร์ต $500 เรียบร้อย' : 'เงินคงเหลือไม่ถึงเกณฑ์เติมพอร์ต'">
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">บันทึกผลกำไร/ขาดทุน (PnL) รายวัน</h2>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">บันทึกผลกำไร/ขาดทุน (PnL) รายวันประจำเดือน</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-xl items-end">
                 <div>
@@ -88,7 +94,7 @@
                     <input type="date" x-model="newDate" class="mt-1 w-full rounded-lg border-gray-200 border p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="text-xs font-medium text-gray-600">กำไร/ขาดทุนสะสมของวันนั้น ($ / PnL)</label>
+                    <label class="text-xs font-medium text-gray-600">กำไร/ขาดทุนของวันนั้น ($)</label>
                     <input type="number" step="any" placeholder="เช่น 56.8 หรือ -20" x-model="newPnl" class="mt-1 w-full rounded-lg border-gray-200 border p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <button @click="addLog" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg shadow-sm transition">
@@ -97,8 +103,8 @@
             </div>
 
             <div class="flex items-center justify-between bg-indigo-50 p-4 rounded-xl mb-6">
-                <span class="text-sm font-medium text-indigo-900">ยอดรวม PnL ที่บันทึกไว้ของเดือนนี้:</span>
-                <span class="text-lg font-bold" :class="totalDailyPnl() >= 0 ? 'text-green-600' : 'text-red-600'" x-text="totalDailyPnl() + ' $'"></span>
+                <span class="text-sm font-medium text-indigo-900" x-text="'PnL รวมของเดือน ' + selectedMonth + ':'"></span>
+                <span class="text-lg font-bold" :class="totalMonthlyPnl() >= 0 ? 'text-green-600' : 'text-red-600'" x-text="totalMonthlyPnl() + ' $'"></span>
             </div>
 
             <div class="overflow-x-auto max-h-60 overflow-y-auto border rounded-lg">
@@ -111,7 +117,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="(log, index) in dailyLogs">
+                        <template x-for="(log, index) in filteredLogs()">
                             <tr class="border-b text-sm text-gray-700 hover:bg-gray-50">
                                 <td class="py-2 px-4" x-text="log.date"></td>
                                 <td class="py-2 px-4 font-medium" :class="log.pnl >= 0 ? 'text-green-600' : 'text-red-600'" x-text="(log.pnl >= 0 ? '+' : '') + log.pnl"></td>
@@ -120,8 +126,8 @@
                                 </td>
                             </tr>
                         </template>
-                        <tr x-show="dailyLogs.length === 0">
-                            <td colspan="3" class="py-4 text-center text-gray-400 text-sm">ยังไม่มีข้อมูล PnL รายวัน</td>
+                        <tr x-show="filteredLogs().length === 0">
+                            <td colspan="3" class="py-4 text-center text-gray-400 text-sm">ยังไม่มีข้อมูล PnL ในเดือนนี้</td>
                         </tr>
                     </tbody>
                 </table>
@@ -129,26 +135,26 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">ตารางจำลองการเติบโต (ทบต้นรายเดือน)</h2>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">ตารางจำลองการเติบโต (ทบต้นตาม PnL เดือนที่เลือก)</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b text-gray-600 text-sm">
-                            <th class="py-3 px-4">เดือนที่</th>
+                            <th class="py-3 px-4">เดือนที่จำลอง</th>
                             <th class="py-3 px-4">ทุนพอร์ตเริ่มต้น ($)</th>
-                            <th class="py-3 px-4">กำไร 20% ($)</th>
+                            <th class="py-3 px-4">กำไรจาก PnL ($)</th>
                             <th class="py-3 px-4">Cash out (THB)</th>
                             <th class="py-3 px-4">เงินเก็บธนาคารสุทธิ (THB)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="month in 6">
+                        <template x-for="m in 6">
                             <tr class="border-b text-sm text-gray-700 hover:bg-gray-50">
-                                <td class="py-3 px-4" x-text="month"></td>
-                                <td class="py-3 px-4" x-text="calculateMonthCapital(month)"></td>
-                                <td class="py-3 px-4" x-text="calculateMonthProfit(month)"></td>
-                                <td class="py-3 px-4" x-text="calculateMonthCashout(month)"></td>
-                                <td class="py-3 px-4" x-text="calculateMonthBank(month)"></td>
+                                <td class="py-3 px-4" x-text="m"></td>
+                                <td class="py-3 px-4" x-text="simMonthCapital(m)"></td>
+                                <td class="py-3 px-4" x-text="simMonthProfit(m)"></td>
+                                <td class="py-3 px-4" x-text="simMonthCashout(m)"></td>
+                                <td class="py-3 px-4" x-text="simMonthBank(m)"></td>
                             </tr>
                         </template>
                     </tbody>
@@ -160,10 +166,8 @@
 
     <script>
         function financialCalculator() {
-            // โหลดค่าตั้งต้นจาก localStorage (ถ้ามี)
             const savedSettings = JSON.parse(localStorage.getItem('tradingSettings')) || {
                 initialCapital: 5000,
-                profitPercent: 20,
                 exRate: 32.8,
                 salary: 35000,
                 totalExpenses: 41900,
@@ -172,47 +176,54 @@
 
             return {
                 initialCapital: savedSettings.initialCapital,
-                profitPercent: savedSettings.profitPercent,
                 exRate: savedSettings.exRate,
                 salary: savedSettings.salary,
                 totalExpenses: savedSettings.totalExpenses,
                 topupAmountThb: savedSettings.topupAmountThb,
 
-                // Daily PnL Tracker State
+                // Filter & State
+                selectedMonth: new Date().toISOString().substring(0, 7), // YYYY-MM ปัจจุบัน
                 newDate: new Date().toISOString().substring(0, 10),
                 newPnl: '',
                 dailyLogs: JSON.parse(localStorage.getItem('tradingLogs')) || [],
 
-                // บันทึกการตั้งค่าลง localStorage
                 saveSettings() {
                     const settings = {
                         initialCapital: this.initialCapital,
-                        profitPercent: this.profitPercent,
                         exRate: this.exRate,
                         salary: this.salary,
                         totalExpenses: this.totalExpenses,
                         topupAmountThb: this.topupAmountThb
                     };
                     localStorage.setItem('tradingSettings', JSON.stringify(settings));
-                    alert('บันทึกข้อมูลตั้งต้นเรียบร้อยแล้ว!');
+                    alert('บันทึกข้อมูลตั้งต้นเรียบร้อย!');
                 },
 
-                // คำนวณเดือนแรก
-                cashoutUsd() {
-                    return (parseFloat(this.initialCapital) * (parseFloat(this.profitPercent) / 100)) * 0.3;
+                filteredLogs() {
+                    return this.dailyLogs.filter(log => log.date.startsWith(this.selectedMonth));
                 },
+
+                totalMonthlyPnl() {
+                    return this.filteredLogs().reduce((sum, log) => sum + parseFloat(log.pnl), 0).toFixed(2);
+                },
+
+                cashoutUsd() {
+                    return parseFloat(this.totalMonthlyPnl()) * 0.3; // 30% ของ PnL รวมเดือนที่เลือก
+                },
+
                 cashoutThb() {
                     return this.cashoutUsd() * parseFloat(this.exRate);
                 },
+
                 bankBalance() {
                     const diff = parseFloat(this.salary) - parseFloat(this.totalExpenses);
                     return diff + this.cashoutThb();
                 },
+
                 topupAction() {
                     return this.bankBalance() > 20000 ? parseFloat(this.topupAmountThb) : 0;
                 },
 
-                // ลอจิก PnL รายวัน
                 addLog() {
                     if (this.newDate && this.newPnl !== '') {
                         this.dailyLogs.unshift({
@@ -223,36 +234,39 @@
                         this.newPnl = '';
                     }
                 },
+
                 removeLog(index) {
-                    this.dailyLogs.splice(index, 1);
-                    this.saveLogsToStorage();
+                    // หา index ตัวจริงจาก dailyLogs แล้วลบ
+                    const logToRemove = this.filteredLogs()[index];
+                    const realIndex = this.dailyLogs.findIndex(log => log === logToRemove);
+                    if (realIndex !== -1) {
+                        this.dailyLogs.splice(realIndex, 1);
+                        this.saveLogsToStorage();
+                    }
                 },
-                totalDailyPnl() {
-                    return this.dailyLogs.reduce((sum, log) => sum + parseFloat(log.pnl), 0).toFixed(2);
-                },
+
                 saveLogsToStorage() {
                     localStorage.setItem('tradingLogs', JSON.stringify(this.dailyLogs));
                 },
 
-                // ลอจิกจำลองตาราง
-                calculateMonthCapital(m) {
+                // ลอจิกจำลองตาราง (อ้างอิง PnL ของเดือนที่เลือก)
+                simMonthCapital(m) {
                     let cap = parseFloat(this.initialCapital);
+                    let pnlSum = parseFloat(this.totalMonthlyPnl());
                     for (let i = 1; i < m; i++) {
-                        let profit = cap * (parseFloat(this.profitPercent) / 100);
-                        cap += (profit * 0.7);
+                        let profitCap = (pnlSum * 0.7); 
+                        cap += profitCap;
                     }
                     return cap.toFixed(2);
                 },
-                calculateMonthProfit(m) {
-                    let cap = parseFloat(this.calculateMonthCapital(m));
-                    return (cap * (parseFloat(this.profitPercent) / 100)).toFixed(2);
+                simMonthProfit(m) {
+                    return parseFloat(this.totalMonthlyPnl()).toFixed(2);
                 },
-                calculateMonthCashout(m) {
-                    let profit = parseFloat(this.calculateMonthProfit(m));
-                    return (profit * 0.3 * parseFloat(this.exRate)).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
+                simMonthCashout(m) {
+                    return (this.cashoutUsd() * parseFloat(this.exRate)).toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 },
-                calculateMonthBank(m) {
-                    let bankPerMonth = (parseFloat(this.salary) - parseFloat(this.totalExpenses)) + (parseFloat(this.calculateMonthProfit(m)) * 0.3 * parseFloat(this.exRate));
+                simMonthBank(m) {
+                    let bankPerMonth = (parseFloat(this.salary) - parseFloat(this.totalExpenses)) + this.cashoutThb();
                     let total = 0;
                     for(let i=0; i<m; i++) {
                         total += bankPerMonth;
