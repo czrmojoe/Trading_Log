@@ -10,13 +10,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Prompt', sans-serif; }
+        /* 8-bit Animation Styling */
+        .pixel-char {
+            image-rendering: pixelated;
+            animation: bounce 1s infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
 
     <div class="max-w-4xl mx-auto" x-data="financialCalculator()" x-init="initChart()">
         
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">📈 Financial & Trading Dashboard</h1>
+        <div class="flex flex-col items-center mb-6">
+            <img src="https://i.pinimg.com/originals/72/38/59/72385908b98b9beec94e095ee8e59005.gif" alt="8-bit Character" class="w-16 h-16 pixel-char mb-2">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">📈 Financial & Trading Dashboard</h1>
+        </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -365,12 +377,10 @@
                     return this.bankBalance() > 20000 ? this.topupAmountThb : 0;
                 },
 
-                // คำนวณเงินสดธนาคารสุทธิหลังจากหักเติมพอร์ตแล้ว
                 netBankRemaining() {
                     return Math.max(0, this.bankBalance() - this.topupAction());
                 },
 
-                // เงินส่วนเกิน 10,000 บาทที่จะนำไปโปะหนี้
                 remainingForDebt() {
                     return Math.max(0, this.netBankRemaining() - 10000);
                 },
@@ -396,13 +406,10 @@
                     return 0;
                 },
 
-                // คำนวณเงินพอร์ตสะสมปัจจุบัน ($) อิงจากเงินในพอร์ตหลังจากหัก Cash out แล้ว
                 currentPortfolioCapital() {
-                    // เงินในพอร์ตคงเหลือ = ทุนตั้งต้น + 70% ของกำไร PnL
                     return this.initialCapital + (parseFloat(this.totalMonthlyPnl()) * 0.7);
                 },
 
-                // คำนวณ Lot Size แนะนำ
                 suggestedLotSize() {
                     return this.currentPortfolioCapital() / 12500;
                 },
@@ -468,7 +475,6 @@
                     return total.toLocaleString('th-TH', { style: 'currency', currency: 'THB' });
                 },
 
-                // Export Backup
                 exportData() {
                     const data = {
                         settings: {
@@ -489,7 +495,6 @@
                     URL.revokeObjectURL(url);
                 },
 
-                // Import Backup
                 importData(event) {
                     const file = event.target.files[0];
                     if (!file) return;
@@ -499,14 +504,12 @@
                         try {
                             const data = JSON.parse(e.target.result);
                             if (data.settings && data.logs) {
-                                // อัปเดต Settings
-                                this.initialCapital = data.settings.initialCapital || 5000;
-                                this.exRate = data.settings.exRate || 32.8;
-                                this.salary = data.settings.salary || 35000;
-                                this.totalExpenses = data.settings.totalExpenses || 41900;
-                                this.topupAmountThb = data.settings.topupAmountThb || 16400;
+                                this.initialCapital = parseFloat(data.settings.initialCapital) || 5000;
+                                this.exRate = parseFloat(data.settings.exRate) || 32.8;
+                                this.salary = parseFloat(data.settings.salary) || 35000;
+                                this.totalExpenses = parseFloat(data.settings.totalExpenses) || 41900;
+                                this.topupAmountThb = parseFloat(data.settings.topupAmountThb) || 16400;
                                 
-                                // อัปเดต Logs
                                 this.dailyLogs = data.logs;
                                 this.saveLogsToStorage();
                                 this.saveSettings();
